@@ -1,9 +1,10 @@
 'use client'
 
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
-import { BarChart, Film, Users, MessageSquare, Home, User } from 'lucide-react'
+import { usePathname, useRouter } from 'next/navigation'
+import { BarChart, Film, Users, MessageSquare, Home, LogOut } from 'lucide-react'
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { useEffect, useState } from 'react';
 
 const navItems = [
   { name: 'Dashboard', href: '/', icon: Home },
@@ -15,6 +16,24 @@ const navItems = [
 
 export function Sidebar() {
   const pathname = usePathname()
+  const router = useRouter()
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    // Check if the user is authenticated only on the client side
+    const authStatus = localStorage.getItem('isAuthenticated') === 'true';
+    setIsAuthenticated(authStatus);
+  }, []);
+
+  const handleLogout = () => {
+    localStorage.removeItem('isAuthenticated') // Clear authentication status
+    router.push('/login') // Redirect to the login page
+  }
+
+  // If not authenticated or on the login page, return null to not render the sidebar
+  if (isAuthenticated === null || !isAuthenticated || pathname === '/login') {
+    return null;
+  }
 
   return (
     <nav className="w-64 bg-white shadow-md h-screen flex flex-col">
@@ -46,6 +65,13 @@ export function Sidebar() {
           </li>
         ))}
       </ul>
+      <button
+        onClick={handleLogout}
+        className="flex items-center px-4 py-3 text-white bg-black hover:bg-gray-800 rounded-lg shadow-md transition duration-200 mt-4"
+      >
+        <LogOut className="mr-3 h-5 w-5" />
+        Logout
+      </button>
     </nav>
   )
 }

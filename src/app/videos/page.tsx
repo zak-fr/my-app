@@ -1,44 +1,159 @@
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Film, Plus } from "lucide-react"
+'use client'
+
+import { useState } from 'react'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+
+interface Video {
+  id: number
+  name: string
+  link: string
+  priority: 'High' | 'Medium'
+  addedBy: string
+  status: 'Done' | 'In Progress'
+}
 
 export default function VideosPage() {
+  const [videos, setVideos] = useState<Video[]>([])
+  const [newVideoName, setNewVideoName] = useState('')
+  const [newVideoLink, setNewVideoLink] = useState('')
+  const [priority, setPriority] = useState('')
+  const [addedBy, setAddedBy] = useState('')
+  const [status, setStatus] = useState('')
+  const [editingVideoId, setEditingVideoId] = useState<number | null>(null)
+
+  const addVideo = () => {
+    if (newVideoName.trim() !== '' && isValidUrl(newVideoLink) && priority && addedBy && status) {
+      const newId = videos.length > 0 ? Math.max(...videos.map(v => v.id)) + 1 : 1
+      const newVideoData: Video = {
+        id: newId,
+        name: newVideoName,
+        link: newVideoLink,
+        priority: priority as 'High' | 'Medium',
+        addedBy: addedBy,
+        status: status as 'Done' | 'In Progress',
+      }
+      setVideos([...videos, newVideoData])
+      resetFields()
+    }
+  }
+
+  const resetFields = () => {
+    setNewVideoName('')
+    setNewVideoLink('')
+    setPriority('')
+    setAddedBy('')
+    setStatus('')
+    setEditingVideoId(null)
+  }
+
+  const removeVideo = (id: number) => {
+    setVideos(videos.filter(video => video.id !== id))
+  }
+
+  const editVideo = (id: number) => {
+    const videoToEdit = videos.find(video => video.id === id)
+    if (videoToEdit) {
+      setNewVideoName(videoToEdit.name)
+      setNewVideoLink(videoToEdit.link)
+      setPriority(videoToEdit.priority)
+      setAddedBy(videoToEdit.addedBy)
+      setStatus(videoToEdit.status)
+      setEditingVideoId(id)
+    }
+  }
+
+  const saveVideo = () => {
+    if (editingVideoId !== null) {
+      setVideos(videos.map(video => 
+        video.id === editingVideoId
+          ? { ...video, name: newVideoName, link: newVideoLink, priority, addedBy, status }
+          : video
+      ))
+      resetFields()
+    }
+  }
+
+  // Function to validate URL
+  const isValidUrl = (urlString: string) => {
+    try {
+      new URL(urlString);
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
+
   return (
-    <div className="space-y-6">
-      <h1 className="text-2xl font-bold">Videos</h1>
-      <div className="flex justify-between items-center">
-        <div className="flex items-center space-x-2">
-          <Input placeholder="Search videos..." className="w-64" />
-          <Button>Search</Button>
-        </div>
-        <Button>
-          <Plus className="mr-2 h-4 w-4" /> Add Video
+    <div className="space-y-4 pl-4">
+      <h1 className="text-2xl font-bold mt-4 mb-2">Videos</h1>
+      <div className="flex space-x-2">
+        <Input
+          type="text"
+          placeholder="New video name"
+          value={newVideoName}
+          onChange={(e) => setNewVideoName(e.target.value)}
+        />
+        <Input
+          type="url"
+          placeholder="Video Link"
+          value={newVideoLink}
+          onChange={(e) => setNewVideoLink(e.target.value)}
+        />
+        <Input
+          type="text"
+          placeholder="Priority (High, Medium)"
+          value={priority}
+          onChange={(e) => setPriority(e.target.value)}
+        />
+        <Input
+          type="text"
+          placeholder="Added By"
+          value={addedBy}
+          onChange={(e) => setAddedBy(e.target.value)}
+        />
+        <Input
+          type="text"
+          placeholder="Status (Done, In Progress)"
+          value={status}
+          onChange={(e) => setStatus(e.target.value)}
+        />
+        <Button onClick={editingVideoId ? saveVideo : addVideo}>
+          {editingVideoId ? 'Save Changes' : 'Add Video'}
         </Button>
       </div>
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead>Title</TableHead>
-            <TableHead>Duration</TableHead>
-            <TableHead>Upload Date</TableHead>
-            <TableHead>Views</TableHead>
+            <TableHead>Name</TableHead>
+            <TableHead>Link</TableHead>
+            <TableHead>Priority</TableHead>
+            <TableHead>Added By</TableHead>
+            <TableHead>Status</TableHead>
+            <TableHead>Actions</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
-          <TableRow>
-            <TableCell className="font-medium">Introduction to Marketing</TableCell>
-            <TableCell>10:30</TableCell>
-            <TableCell>2023-05-15</TableCell>
-            <TableCell>1,234</TableCell>
-          </TableRow>
-          <TableRow>
-            <TableCell className="font-medium">Social Media Strategies</TableCell>
-            <TableCell>15:45</TableCell>
-            <TableCell>2023-05-20</TableCell>
-            <TableCell>2,567</TableCell>
-          </TableRow>
-          {/* Add more rows as needed */}
+          {videos.map((video) => (
+            <TableRow key={video.id}>
+              <TableCell>{video.name}</TableCell>
+              <TableCell>{video.link}</TableCell>
+              <TableCell>{video.priority}</TableCell>
+              <TableCell>{video.addedBy}</TableCell>
+              <TableCell>{video.status}</TableCell>
+              <TableCell>
+                <div className="flex space-x-2">
+                  <Button variant="ghost" size="sm" onClick={() => editVideo(video.id)}>
+                    Edit
+                  </Button>
+                  <Button variant="ghost" size="sm" onClick={() => removeVideo(video.id)}>
+                    Delete
+                  </Button>
+                </div>
+              </TableCell>
+            </TableRow>
+          ))}
         </TableBody>
       </Table>
     </div>
