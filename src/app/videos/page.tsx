@@ -18,9 +18,9 @@ export default function VideosPage() {
   const [videos, setVideos] = useState<Video[]>([])
   const [newVideoName, setNewVideoName] = useState('')
   const [newVideoLink, setNewVideoLink] = useState('')
-  const [priority, setPriority] = useState('')
+  const [priority, setPriority] = useState<'High' | 'Medium'>('High')
   const [addedBy, setAddedBy] = useState('')
-  const [status, setStatus] = useState('')
+  const [status, setStatus] = useState<'Done' | 'In Progress'>('Done')
   const [editingVideoId, setEditingVideoId] = useState<number | null>(null)
 
   const addVideo = () => {
@@ -30,9 +30,9 @@ export default function VideosPage() {
         id: newId,
         name: newVideoName,
         link: newVideoLink,
-        priority: priority as 'High' | 'Medium',
-        addedBy: addedBy,
-        status: status as 'Done' | 'In Progress',
+        priority,
+        addedBy,
+        status,
       }
       setVideos([...videos, newVideoData])
       resetFields()
@@ -42,9 +42,9 @@ export default function VideosPage() {
   const resetFields = () => {
     setNewVideoName('')
     setNewVideoLink('')
-    setPriority('')
+    setPriority('High')
     setAddedBy('')
-    setStatus('')
+    setStatus('Done')
     setEditingVideoId(null)
   }
 
@@ -105,7 +105,7 @@ export default function VideosPage() {
           type="text"
           placeholder="Priority (High, Medium)"
           value={priority}
-          onChange={(e) => setPriority(e.target.value)}
+          onChange={(e) => setPriority(e.target.value as 'High' | 'Medium')}
         />
         <Input
           type="text"
@@ -117,7 +117,7 @@ export default function VideosPage() {
           type="text"
           placeholder="Status (Done, In Progress)"
           value={status}
-          onChange={(e) => setStatus(e.target.value)}
+          onChange={(e) => setStatus(e.target.value as 'Done' | 'In Progress')}
         />
         <Button onClick={editingVideoId ? saveVideo : addVideo}>
           {editingVideoId ? 'Save Changes' : 'Add Video'}

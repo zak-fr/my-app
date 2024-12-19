@@ -10,18 +10,14 @@ interface Comment {
   status: 'Done' | 'In Progress';
 }
 
-interface CommentsPageProps {
-  initialComments?: Comment[];
-}
-
-export default function CommentsPage({ initialComments = [] }: CommentsPageProps) {
-  const [comments, setComments] = useState<Comment[]>(initialComments);
+export default function CommentsPage() {
+  const [comments, setComments] = useState<Comment[]>([]);
   const [newCommentator, setNewCommentator] = useState('');
   const [newContent, setNewContent] = useState('');
   const [newStatus, setNewStatus] = useState<'Done' | 'In Progress'>('In Progress');
 
   const addComment = () => {
-    if (newCommentator.trim() && newContent.trim()) {
+    if (newCommentator && newContent) {
       const newComment: Comment = {
         id: comments.length + 1,
         commentator: newCommentator,
@@ -29,12 +25,15 @@ export default function CommentsPage({ initialComments = [] }: CommentsPageProps
         date: new Date(),
         status: newStatus,
       };
-
       setComments([...comments, newComment]);
-      setNewCommentator('');
-      setNewContent('');
-      setNewStatus('In Progress');
+      resetForm();
     }
+  };
+
+  const resetForm = () => {
+    setNewCommentator('');
+    setNewContent('');
+    setNewStatus('In Progress');
   };
 
   const removeComment = (id: number) => {
@@ -44,49 +43,47 @@ export default function CommentsPage({ initialComments = [] }: CommentsPageProps
   return (
     <div className="p-6 bg-gray-100 min-h-screen text-gray-800">
       <h1 className="text-3xl font-bold mb-4">Comments</h1>
-      <p className="text-gray-600 mb-6">Manage your comments below.</p>
-      <div className="mt-4 flex items-center space-x-2">
+      <div className="flex space-x-2 mb-4">
         <input 
           type="text" 
           value={newCommentator} 
           onChange={(e) => setNewCommentator(e.target.value)} 
-          className="border border-gray-300 bg-white rounded p-1 focus:outline-none focus:ring-2 focus:ring-blue-500 flex-1 h-10"
-          placeholder="Commentator name"
+          className="border rounded p-1 flex-1"
+          placeholder="Name"
         />
         <textarea 
           value={newContent} 
           onChange={(e) => setNewContent(e.target.value)} 
-          className="border border-gray-300 bg-white rounded p-1 focus:outline-none focus:ring-2 focus:ring-blue-500 flex-1 h-10"
-          placeholder="Add a comment"
+          className="border rounded p-1 flex-1"
+          placeholder="Comment"
         />
         <select 
           value={newStatus} 
           onChange={(e) => setNewStatus(e.target.value as 'Done' | 'In Progress')} 
-          className="border border-gray-300 bg-white rounded p-1 focus:outline-none focus:ring-2 focus:ring-blue-500 h-10"
+          className="border rounded p-1"
         >
           <option value="In Progress">In Progress</option>
           <option value="Done">Done</option>
         </select>
         <button 
           onClick={addComment} 
-          className="bg-black text-white rounded p-1 hover:bg-gray-800 transition h-10"
+          className="bg-black text-white rounded p-1"
         >
-          Add Comment
+          Add
         </button>
       </div>
-      <div className="space-y-4 mt-4">
+      <div>
         {comments.map((comment) => (
-          <div key={comment.id} className="bg-white shadow-md rounded-lg p-4 flex flex-col border border-gray-300">
+          <div key={comment.id} className="bg-white shadow-md rounded-lg p-4 mb-2">
             <p className="font-bold">{comment.commentator}</p>
             <p>{comment.content}</p>
             <p className="text-gray-500">{comment.date.toLocaleString()}</p>
             <p className="text-gray-500">Status: {comment.status}</p>
             <button 
               onClick={() => removeComment(comment.id)} 
-              className="text-red-500 hover:text-red-700 mt-2"
-              aria-label="Remove comment"
+              className="text-red-500 hover:text-red-700"
             >
-              &times;
+              Remove
             </button>
           </div>
         ))}

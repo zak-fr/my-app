@@ -13,118 +13,93 @@ interface Campaign {
   dateDeadline: Date
   priority: 'High' | 'Medium' | 'Low'
   addedBy: string
-  status: 'Done' | 'In Progress'
+  status: 'Done' | 'In Progress' | 'Active' | 'Planned'
+  budget: number
 }
 
 export default function CampaignsPage() {
   const [campaigns, setCampaigns] = useState<Campaign[]>([
-    { id: 1, name: 'Summer Sale', status: 'Active', budget: 5000 },
-    { id: 2, name: 'Winter Promo', status: 'Planned', budget: 3000 },
+    { id: 1, name: 'Summer Sale', status: 'Active', budget: 5000, dateCreated: new Date(), dateDeadline: new Date(), priority: 'High', addedBy: 'User1' },
+    { id: 2, name: 'Winter Promo', status: 'Planned', budget: 3000, dateCreated: new Date(), dateDeadline: new Date(), priority: 'Medium', addedBy: 'User2' },
   ])
+  
   const [newCampaign, setNewCampaign] = useState('')
-  const [filterName, setFilterName] = useState('');
-  const [filterDateCreated, setFilterDateCreated] = useState('');
-  const [filterDateDeadline, setFilterDateDeadline] = useState('');
-  const [filterPriority, setFilterPriority] = useState('');
-  const [filterAddedBy, setFilterAddedBy] = useState('');
-  const [filterStatus, setFilterStatus] = useState('');
-  const [dateCreated, setDateCreated] = useState('');
-  const [dateDeadline, setDateDeadline] = useState('');
-  const [priority, setPriority] = useState('');
-  const [addedBy, setAddedBy] = useState('');
-  const [status, setStatus] = useState('');
-  const [editingCampaignId, setEditingCampaignId] = useState<number | null>(null);
+  const [dateCreated, setDateCreated] = useState('')
+  const [dateDeadline, setDateDeadline] = useState('')
+  const [priority, setPriority] = useState<'High' | 'Medium' | 'Low'>('High')
+  const [addedBy, setAddedBy] = useState('')
+  const [status, setStatus] = useState<'Done' | 'In Progress' | 'Active' | 'Planned'>('Active')
+  const [editingCampaignId, setEditingCampaignId] = useState<number | null>(null)
+
+  // Define the resetForm function
+  const resetForm = () => {
+    setNewCampaign('')
+    setDateCreated('')
+    setDateDeadline('')
+    setPriority('High')
+    setAddedBy('')
+    setStatus('Active')
+  }
 
   const addCampaign = async () => {
     if (newCampaign.trim() !== '' && dateCreated && dateDeadline && priority && addedBy && status) {
-      const newCampaignData = {
+      const newCampaignData: Campaign = {
+        id: campaigns.length + 1, // Simple ID generation
         name: newCampaign,
         dateCreated: new Date(dateCreated),
         dateDeadline: new Date(dateDeadline),
         priority,
         addedBy,
         status,
-      };
-
-      console.log('New Campaign Data:', newCampaignData);
-
-      const response = await fetch('http://localhost:1337/api/campaigns', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(newCampaignData),
-      });
-
-      if (response.ok) {
-        const savedCampaign = await response.json();
-        setCampaigns([...campaigns, savedCampaign]);
-        resetForm();
-      } else {
-        console.error('Error adding campaign:', response.statusText);
+        budget: 0, // Default budget
       }
+
+      console.log('New Campaign Data:', newCampaignData)
+
+      // Simulate API call
+      setCampaigns([...campaigns, newCampaignData])
+      resetForm() // Call resetForm to clear the input fields
+    } else {
+      console.error('Please fill in all fields.')
     }
-  };
+  }
 
   const removeCampaign = (id: number) => {
     setCampaigns(campaigns.filter(campaign => campaign.id !== id))
   }
 
-  // Function to sort campaigns based on the selected field
-  const sortCampaigns = (field: keyof Campaign) => {
-    const sortedCampaigns = [...campaigns].sort((a, b) => {
-      if (typeof a[field] === 'string' && typeof b[field] === 'string') {
-        return a[field].localeCompare(b[field]);
-      }
-      return (a[field] as any) - (b[field] as any);
-    });
-    setCampaigns(sortedCampaigns);
+  const editCampaign = (id: number) => {
+    const campaignToEdit = campaigns.find(campaign => campaign.id === id)
+    if (campaignToEdit) {
+      setNewCampaign(campaignToEdit.name)
+      setDateCreated(campaignToEdit.dateCreated.toISOString().split('T')[0])
+      setDateDeadline(campaignToEdit.dateDeadline.toISOString().split('T')[0])
+      setPriority(campaignToEdit.priority)
+      setAddedBy(campaignToEdit.addedBy)
+      setStatus(campaignToEdit.status)
+      setEditingCampaignId(id)
+    }
   }
 
-  // Function to filter campaigns based on the input fields
-  const filteredCampaigns = campaigns.filter(campaign => {
-    return (
-      (filterName === '' || campaign.name.toLowerCase().includes(filterName.toLowerCase())) &&
-      (filterDateCreated === '' || campaign.dateCreated.toLocaleDateString() === filterDateCreated) &&
-      (filterDateDeadline === '' || campaign.dateDeadline.toLocaleDateString() === filterDateDeadline) &&
-      (filterPriority === '' || campaign.priority === filterPriority) &&
-      (filterAddedBy === '' || campaign.addedBy.toLowerCase().includes(filterAddedBy.toLowerCase())) &&
-      (filterStatus === '' || campaign.status === filterStatus)
-    );
-  });
-
-  // Function to handle editing a campaign
-  const editCampaign = (id: number) => {
-    const campaignToEdit = campaigns.find(campaign => campaign.id === id);
-    if (campaignToEdit) {
-      setNewCampaign(campaignToEdit.name);
-      setDateCreated(campaignToEdit.dateCreated ? campaignToEdit.dateCreated.toISOString().split('T')[0] : '');
-      setDateDeadline(campaignToEdit.dateDeadline ? campaignToEdit.dateDeadline.toISOString().split('T')[0] : '');
-      setPriority(campaignToEdit.priority);
-      setAddedBy(campaignToEdit.addedBy);
-      setStatus(campaignToEdit.status);
-      setEditingCampaignId(id); // Set the ID of the campaign being edited
-    }
-  };
-
-  // Function to save the edited campaign
   const saveCampaign = () => {
     if (editingCampaignId !== null) {
       setCampaigns(campaigns.map(campaign => 
         campaign.id === editingCampaignId
-          ? { ...campaign, name: newCampaign, dateCreated: new Date(dateCreated), dateDeadline: new Date(dateDeadline), priority, addedBy, status }
+          ? { 
+              ...campaign, 
+              name: newCampaign, 
+              dateCreated: new Date(dateCreated), 
+              dateDeadline: new Date(dateDeadline), 
+              priority, 
+              addedBy, 
+              status 
+            }
           : campaign
-      ));
-      // Reset the input fields
-      setNewCampaign('');
-      setDateCreated('');
-      setDateDeadline('');
-      setPriority('');
-      setAddedBy('');
-      setStatus('');
-      setEditingCampaignId(null); // Reset editing state
+      ))
+      resetForm() // Reset the form after saving
+      setEditingCampaignId(null) // Reset editing state
     }
-  };
+  }
 
   return (
     <div className="space-y-4">
@@ -153,7 +128,7 @@ export default function CampaignsPage() {
           type="text"
           placeholder="Priority (High, Medium, Low)"
           value={priority}
-          onChange={(e) => setPriority(e.target.value)}
+          onChange={(e) => setPriority(e.target.value as 'High' | 'Medium' | 'Low')}
         />
         <Input
           type="text"
@@ -163,9 +138,9 @@ export default function CampaignsPage() {
         />
         <Input
           type="text"
-          placeholder="Status (Done, In Progress)"
+          placeholder="Status (Done, In Progress, Active, Planned)"
           value={status}
-          onChange={(e) => setStatus(e.target.value)}
+          onChange={(e) => setStatus(e.target.value as 'Done' | 'In Progress' | 'Active' | 'Planned')}
         />
         <Button onClick={editingCampaignId ? saveCampaign : addCampaign}>
           {editingCampaignId ? 'Save Changes' : 'Add Campaign'}
@@ -184,11 +159,11 @@ export default function CampaignsPage() {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {filteredCampaigns.map((campaign) => (
+          {campaigns.map((campaign) => (
             <TableRow key={campaign.id}>
               <TableCell>{campaign.name}</TableCell>
-              <TableCell>{campaign.dateCreated ? campaign.dateCreated.toLocaleDateString() : 'N/A'}</TableCell>
-              <TableCell>{campaign.dateDeadline ? campaign.dateDeadline.toLocaleDateString() : 'N/A'}</TableCell>
+              <TableCell>{campaign.dateCreated.toLocaleDateString()}</TableCell>
+              <TableCell>{campaign.dateDeadline.toLocaleDateString()}</TableCell>
               <TableCell>{campaign.priority}</TableCell>
               <TableCell>{campaign.addedBy}</TableCell>
               <TableCell>{campaign.status}</TableCell>
